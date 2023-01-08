@@ -50,7 +50,7 @@ app.post(
   }),
   function (request, response) {
     console.log(request.user);
-    response.redirect("/admin");
+    response.redirect("/elections");
   }
 );
 
@@ -79,11 +79,11 @@ passport.use(
 
 passport.serializeUser((user, done) => {
   console.log("Serializing user in session", user.id);
-  done(null, user.id);
+  done(null, {id:user.id, case:user.case});
 });
 
 passport.deserializeUser((id, done) => {
-  admin.findByPk(id)
+  Admin.findByPk(id)
     .then((user) => {
       done(null, user);
     })
@@ -95,10 +95,15 @@ passport.deserializeUser((id, done) => {
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", async (request, response) => {
+  if (request.user) {
+  if (request.user.case === "admins") {
+    return response.redirect("/elections");
+  } else {
   response.render("index", {
-    title: "e-Voting",
+    title: "Online Voting Platform",
     csrfToken: request.csrfToken(),
   });
+}}
 });
 
 
@@ -134,7 +139,6 @@ app.post("/admins", async (request, response) => {
   }
   const hashedPwd = await bcrypt.hash(request.body.password, saltRounds);
   console.log(hashedPwd);
-
   try {
     const user = await User.create({
       firstName: request.body.name,
@@ -156,7 +160,6 @@ app.post("/admins", async (request, response) => {
   }
 });
 
-
 app.get("/signout", (request, response, next) => {
   request.logout((err) => {
     if (err) {
@@ -166,14 +169,6 @@ app.get("/signout", (request, response, next) => {
   });
 });
 
-app.post(
-  "/session",
-  passport.authenticate("local", { failureRedirect: "/login" }),
-  (request, response) => {
-    console.log(request.user);
-    response.redirect("/adminhome");
-  }
-);
 
 
 module.exports = app;
