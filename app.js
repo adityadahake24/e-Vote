@@ -3,7 +3,7 @@
 const express = require("express");
 var csrf = require("tiny-csrf");
 const app = express();
-const { Todo, User } = require("./models");
+const { Admin, newelection, question, choice } = require("./models");
 const bodyParser = require("body-parser");
 var cookieParser = require("cookie-parser");
 const path = require("path");
@@ -61,7 +61,7 @@ passport.use(
       passwordField: "password",
     },
     (username, password, done) => {
-      admin.findOne({ where: { email: username } })
+      Admin.findOne({ where: { email: username } })
         .then(async function (user) {
           const result = await bcrypt.compare(password, user.password);
           if (result) {
