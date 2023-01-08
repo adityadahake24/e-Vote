@@ -40,7 +40,7 @@ describe("e-Vote test suite ", function () {
   test("Sign up", async () => {
     let res = await agent.get("/signup");
     const csrfToken = extractCsrfToken(res);
-    res = await agent.post("/users").send({
+    res = await agent.post("/Admins").send({
       firstName: "Test",
       lastName: "User A",
       email: "user.a@test.com",
@@ -51,11 +51,11 @@ describe("e-Vote test suite ", function () {
   });
 
   test("Sign out", async () => {
-    let res = await agent.get("/todo");
+    let res = await agent.get("/Admin");
     expect(res.statusCode).toBe(200);
     res = await agent.get("/signout");
     expect(res.statusCode).toBe(302);
-    res = await agent.get("/todo");
+    res = await agent.get("/Admin");
     expect(res.statusCode).toBe(302);
   });
 
