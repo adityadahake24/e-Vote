@@ -1,5 +1,5 @@
 {
-  "name": "todo-manager",
+  "name": "voting-system",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -46,11 +46,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/adityadahake24/WD201-L7.git"
+    "url": "git+https://github.com/adityadahake24/e-Vote.git"
   },
   "bugs": {
-    "url": "https://github.com/adityadahake24/WD201-L7/issues"
+    "url": "https://github.com/adityadahake24/e-Vote/issues"
   },
-  "homepage": "https://github.com/adityadahake24/WD201-L7#readme",
+  "homepage": "https://github.com/adityadahake24/e-Vote#readme",
   "description": ""
 }

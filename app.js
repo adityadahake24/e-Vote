@@ -8,7 +8,7 @@ const bodyParser = require("body-parser");
 var cookieParser = require("cookie-parser");
 const path = require("path");
 app.set("views", path.join(__dirname, "views"));
-const todo = require("./models/todo");
+const admin = require("./models/admin");
 const { title } = require("process");
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: false }));
@@ -50,7 +50,7 @@ app.post(
   }),
   function (request, response) {
     console.log(request.user);
-    response.redirect("/todo");
+    response.redirect("/admin");
   }
 );
 
@@ -61,7 +61,7 @@ passport.use(
       passwordField: "password",
     },
     (username, password, done) => {
-      User.findOne({ where: { email: username } })
+      admin.findOne({ where: { email: username } })
         .then(async function (user) {
           const result = await bcrypt.compare(password, user.password);
           if (result) {
@@ -83,7 +83,7 @@ passport.serializeUser((user, done) => {
 });
 
 passport.deserializeUser((id, done) => {
-  User.findByPk(id)
+  admin.findByPk(id)
     .then((user) => {
       done(null, user);
     })
@@ -115,17 +115,17 @@ app.get("/login", (request, response) => {
 });
 
 
-app.post("/users", async (request, response) => {
-  if (!request.body.firstName) {
-    request.flash("error", "Enter your first name");
+app.post("/admins", async (request, response) => {
+  if (!request.body.name) {
+    request.flash("error", "Please enter your Name");
     return response.redirect("/signup");
   }
   if (!request.body.email) {
-    request.flash("error", "Enter email ID");
+    request.flash("error", "Please enter email ID");
     return response.redirect("/signup");
   }
-  if (!request.body.password) {
-    request.flash("error", "Enter your password");
+  if (!request.body.password < 1 ) {
+    request.flash("error", "Please enter your password");
     return response.redirect("/signup");
   }
   if (request.body.password < 8) {
@@ -137,8 +137,7 @@ app.post("/users", async (request, response) => {
 
   try {
     const user = await User.create({
-      firstName: request.body.firstName,
-      lastName: request.body.lastName,
+      firstName: request.body.name,
       email: request.body.email,
       password: hashedPwd,
     });
@@ -146,7 +145,7 @@ app.post("/users", async (request, response) => {
       if (err) {
         console.log(err);
       }
-      response.redirect("/todo");
+      response.redirect("/adminhome");
     });
   } catch (error) {
     request.flash(
@@ -172,7 +171,7 @@ app.post(
   passport.authenticate("local", { failureRedirect: "/login" }),
   (request, response) => {
     console.log(request.user);
-    response.redirect("/todo");
+    response.redirect("/adminhome");
   }
 );
 

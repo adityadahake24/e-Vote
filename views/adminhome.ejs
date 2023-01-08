@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title><%= title %></title>
+  </head>
+  <body>
+    <div class="grid grid-cols-5">
+      <div class="col-start-3 colspan-3">
+        <%- include('header.ejs') %>
+        <div class="flex-auto">
+          <h1>
+            Welcome :
+            <span class="text-green-600"> <%= Name%></span>
+          </h1>
+        </div>
+
+        <div class="flex-auto py-4">
+          <h1>My Elections List :</h1>
+        </div>
+        <%- include('lists_of_elections.ejs') %>
+
+        <div class="flex gap-1 py-5 justify-between">
+          <div
+            class="text-white bg-green-600 hover:bg-green-700 font-small rounded px-3 py-2">
+            <a href="create" class="text-white"> create a new election</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
