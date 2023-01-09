@@ -79,7 +79,7 @@ passport.use(
 
 passport.serializeUser((user, done) => {
   console.log("Serializing user in session", user.id);
-  done(null, {id:user.id, case:user.case});
+  done(null, user.id);
 });
 
 passport.deserializeUser((id, done) => {
@@ -94,12 +94,13 @@ passport.deserializeUser((id, done) => {
 
 app.use(express.static(path.join(__dirname, "public")));
 
+//landing page Index.ejs
 app.get("/", async (request, response) => {
   if (request.user) {
   if (request.user.case === "admins") {
     return response.redirect("/elections");
   } else {
-  response.render("index", {
+  response.render("./views/index.ejs", {
     title: "Online Voting Platform",
     csrfToken: request.csrfToken(),
   });
@@ -140,7 +141,7 @@ app.post("/admins", async (request, response) => {
   const hashedPwd = await bcrypt.hash(request.body.password, saltRounds);
   console.log(hashedPwd);
   try {
-    const user = await User.create({
+    const user = await Admin.create({
       firstName: request.body.name,
       email: request.body.email,
       password: hashedPwd,
@@ -149,7 +150,7 @@ app.post("/admins", async (request, response) => {
       if (err) {
         console.log(err);
       }
-      response.redirect("/adminhome");
+      response.redirect("/elections");
     });
   } catch (error) {
     request.flash(
@@ -168,6 +169,249 @@ app.get("/signout", (request, response, next) => {
     response.redirect("/");
   });
 });
+
+////////////////////////////////////////////////////////////////////////////////////
+
+//password reset page
+app.get(
+  "/password-reset",
+  connectEnsureLogin.ensureLoggedIn(),
+  (request, response) => {
+    response.render("password-reset", {
+      title: "Reset your password",
+      csrfToken: request.csrfToken(),
+    });
+  }
+);
+
+//reset user password
+app.post(
+  "/password-reset",
+  connectEnsureLogin.ensureLoggedIn(),
+  async (request, response) => {
+    if (!request.body.old_password) {
+      request.flash("error", "Please enter your old password");
+      return response.redirect("/password-reset");
+    }
+    if (!request.body.new_password) {
+      request.flash("error", "Please enter a new password");
+      return response.redirect("/password-reset");
+    }
+    if (request.body.new_password.length < 8) {
+      request.flash("error", "Password length should be atleast 8");
+      return response.redirect("/password-reset");
+    }
+    const hashedNewPwd = await bcrypt.hash(
+      request.body.new_password,
+      saltRounds
+    );
+    const result = await bcrypt.compare(
+      request.body.old_password,
+      request.user.password
+    );
+    if (result) {
+      Admin.findOne({ where: { email: request.user.email } }).then((user) => {
+        user.resetPass(hashedNewPwd);
+      });
+      request.flash("success", "Password changed successfully");
+      return response.redirect("/elections");
+    } else {
+      request.flash("error", "Old password does not match");
+      return response.redirect("/password-reset");
+    }
+  }
+);
+
+//new election page
+app.get(
+  "/elections/create",
+  connectEnsureLogin.ensureLoggedIn(),
+  async (request, response) => {
+    response.render("new_election", {
+      title: "Create an election",
+      csrfToken: request.csrfToken(),
+    });
+  }
+);
+
+//creating new election
+app.post(
+  "/elections",
+  connectEnsureLogin.ensureLoggedIn(),
+  async (request, response) => {
+    if (request.body.electionName.length < 5) {
+      request.flash("error", "Election name length should be atleast 5");
+      return response.redirect("/elections/create");
+    }
+    try {
+      await Election.addElection({
+        electionName: request.body.electionName,
+        adminID: request.user.id,
+      });
+      response.redirect("/elections");
+    } catch (error) {
+      console.log(error);
+      return response.status(422).json(error);
+    }
+  }
+);
+
+//election page
+app.get(
+  "/elections/:id",
+  connectEnsureLogin.ensureLoggedIn(),
+  async (request, response) => {
+    try {
+      const election = await Election.getElection(
+        request.params.id,
+        request.user.id
+      );
+      const numberOfQuestions = await Questions.getNumberOfQuestions(
+        request.params.id
+      );
+      response.render("election_page", {
+        id: request.params.id,
+        title: election.electionName,
+        nq: numberOfQuestions,
+        nv: 23,
+      });
+    } catch (error) {
+      console.log(error);
+      return response.status(422).json(error);
+    }
+  }
+);
+
+//manage questions page
+app.get(
+  "/elections/:id/questions",
+  connectEnsureLogin.ensureLoggedIn(),
+  async (request, response) => {
+    const election = await Election.getElection(
+      request.params.id,
+      request.user.id
+    );
+    const questions = await Questions.getQuestions(request.params.id);
+    response.render("questions", {
+      title: election.electionName,
+      id: request.params.id,
+      questions: questions,
+      csrfToken: request.csrfToken(),
+    });
+  }
+);
+
+//add question page
+app.get(
+  "/elections/:id/questions/create",
+  connectEnsureLogin.ensureLoggedIn(),
+  async (request, response) => {
+    response.render("new_question", {
+      id: request.params.id,
+      csrfToken: request.csrfToken(),
+    });
+  }
+);
+
+//add question
+app.post(
+  "/elections/:id/questions/create",
+  connectEnsureLogin.ensureLoggedIn(),
+  async (request, response) => {
+    if (request.body.question.length < 5) {
+      request.flash("error", "question length should be atleast 5");
+      return response.redirect(
+        `/elections/${request.params.id}/questions/create`
+      );
+    }
+    try {
+      const question = await Questions.addQuestion({
+        question: request.body.question,
+        description: request.body.description,
+        electionID: request.params.id,
+      });
+      return response.redirect(
+        `/elections/${request.params.id}/questions/${question.id}`
+      );
+    } catch (error) {
+      console.log(error);
+      return response.status(422).json(error);
+    }
+  }
+);
+
+//delete question
+app.delete(
+  "/questions/:questionID",
+  connectEnsureLogin.ensureLoggedIn(),
+  async (request, response) => {
+    try {
+      const res = await Questions.deleteQuestion(request.params.questionID);
+      return response.json({ success: res === 1 });
+    } catch (error) {
+      console.log(error);
+      return response.status(422).json(error);
+    }
+  }
+);
+
+//question page 
+app.get(
+  "/elections/:id/questions/:questionID", // routes to election and question id 
+  connectEnsureLogin.ensureLoggedIn(),
+  async (request, response) => {
+    const question = await Questions.getQuestion(request.params.questionID);
+    const options = await Options.getOptions(request.params.questionID);
+    response.render("question_page", {
+      title: question.question,
+      description: question.description,
+      id: request.params.id,
+      questionID: request.params.questionID,
+      options,
+      csrfToken: request.csrfToken(),
+    });
+  }
+);
+
+//adding options to the questions 
+app.post(
+  "/elections/:id/questions/:questionID",
+  connectEnsureLogin.ensureLoggedIn(),
+  async (request, response) => {
+    if (!request.body.option.length) {
+      request.flash("error", "Please enter options to the questions");
+      return response.redirect("/todos");
+    }
+    try {
+      await Options.addOption({
+        option: request.body.option,
+        questionID: request.params.questionID,
+      });
+      return response.redirect(
+        `/elections/${request.params.id}/questions/${request.params.questionID}`
+      );
+    } catch (error) {
+      console.log(error);
+      return response.status(422).json(error);
+    }
+  }
+);
+
+//delete choices created 
+app.delete(
+  "/options/:optionID", //file routes and option id address
+  connectEnsureLogin.ensureLoggedIn(),
+  async (request, response) => {
+    try {
+      const res = await Options.deleteOption(request.params.optionID); 
+      return response.json({ success: res === 1 });
+    } catch (error) {
+      console.log(error);
+      return response.status(422).json(error);
+    }
+  }
+);
+
 
 
 

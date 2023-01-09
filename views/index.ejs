@@ -1,27 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-    <meta name="csrf-token" content="<%= csrfToken %>" />
-    <link href="./css/styles.css" rel="stylesheet" />
-    <title>Voting System</title>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body  class="bg-gradient-to-tl from-green-200 to-green-500 min-h-screen w-full">
-    <div class="navbar">
-      <a href="#">Home</a>
-      <a href="#">Voter Registration</a>
-      <a href="#">Candidate Registration</a>
-      <a href="#">Election Results</a>
-  </div>
-    <div class="grid grid-cols-6">
-      <div class="col-start-3 col-span-2">
-        <p class="py-2">Welcome to Online Elections centre</p>
-        <p class="py-2">New User? <a href="/signup" class="text-green-600"> Sign-up now </a> </p>
-        <p class="py-2">Existing User? <a href="/login" class="text-green-600">Sign-in</a></p>
-      </div>
+    <link rel="stylesheet" href="./css/style.css">
+    <title><%= title %></title>
+</head>
+<body>
+    <nav class="">
+        <div class="py-3 container flex flex-wrap items-center justify-between mx-auto">
+            <span class="self-center text-xl font-semibold whitespace-nowrap text-blue-800"><b>Online Voting Platform</b></span>
+        </div>
+    </nav>
+    <div class="grid grid-cols-6 py-3" >
+        <div class="col-start-3 col-span-2">
+            <p class="py-3">Welcome to Online Voting Platform</p>
+            <p class="py-3">Don't have a account <a class="mt-6 bg-blue-500 text-white py-3 px-6 rounded-md hover:bg-blue-600 " href="/signup">Sign-up</a></p>
+            <p class="py-3">Already have an account? <a class="mt-6 bg-blue-500 text-white py-3 px-6 rounded-md hover:bg-blue-600 " href="/login">Sign-in</a></p>
+        </div>
     </div>
-  </body>
+</body>
 </html>
